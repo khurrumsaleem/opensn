@@ -275,7 +275,7 @@ public:
    * typically only the flux moments, however, the sweep based solvers
    * might include delayed angular fluxes in this number.
    */
-  virtual std::pair<size_t, size_t> GetNumPhiIterativeUnknowns();
+  virtual std::pair<std::uint64_t, std::uint64_t> GetNumPhiIterativeUnknowns();
 
   /// Field-function and postprocessing helpers.
   /**
