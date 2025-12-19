@@ -228,7 +228,7 @@ public:
   size_t GetLocalNodeCount() const;
 
   /// Returns the global node count for the flux-moments data structures.
-  size_t GetGlobalNodeCount() const;
+  std::uint64_t GetGlobalNodeCount() const;
 
   /**
    * Internal solver-state access.
