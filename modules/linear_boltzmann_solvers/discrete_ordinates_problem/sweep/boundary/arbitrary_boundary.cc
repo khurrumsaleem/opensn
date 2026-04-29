@@ -20,7 +20,7 @@ ArbitraryBoundary::ArbitraryBoundary(BoundaryBank& bank,
   for (const auto& groupset : groupsets)
   {
     auto quadrature = groupset.quadrature;
-    auto num_angles = quadrature->omegas.size();
+    auto num_angles = quadrature->GetNumAngles();
 
     bank_.ExtendBoundaryFlux(groupset.id, num_angles * groupset.GetNumGroups());
     auto& map_dirnum = extra_data_[groupset.id].map_dirnum;

@@ -112,7 +112,7 @@ ReflectingBoundary::InitializeReflectingMap(const std::vector<LBSGroupset>& grou
   {
     const auto& quadrature = groupset.quadrature;
     auto& angle_agg = *(groupset.angle_agg);
-    auto num_angles = quadrature->omegas.size();
+    auto num_angles = quadrature->GetNumAngles();
 
     auto& extra_data = extra_data_[groupset.id];
     auto& reflected_anglenum = extra_data.reflected_anglenum;
@@ -124,7 +124,7 @@ ReflectingBoundary::InitializeReflectingMap(const std::vector<LBSGroupset>& grou
 
     for (std::uint32_t n = 0; n < num_angles; ++n)
     {
-      const Vector3& omega_n = quadrature->omegas[n];
+      const Vector3& omega_n = quadrature->GetOmega(n);
       Vector3 omega_reflected;
 
       switch (coord_type_)
@@ -158,7 +158,7 @@ ReflectingBoundary::InitializeReflectingMap(const std::vector<LBSGroupset>& grou
       bool found = false;
       for (std::uint32_t nstar = 0; nstar < num_angles; ++nstar)
       {
-        if (omega_reflected.Dot(quadrature->omegas[nstar]) > (1.0 - epsilon_))
+        if (omega_reflected.Dot(quadrature->GetOmega(nstar)) > (1.0 - epsilon_))
         {
           reflected_anglenum[n] = nstar;
           found = true;
@@ -170,7 +170,7 @@ ReflectingBoundary::InitializeReflectingMap(const std::vector<LBSGroupset>& grou
       {
         throw std::logic_error("ReflectingBoundary: Reflected angle not found for angle " +
                                std::to_string(n) + " with direction " +
-                               quadrature->omegas[n].PrintStr() +
+                               quadrature->GetOmega(n).PrintStr() +
                                ".\nThis can happen for two reasons:\n1) A quadrature is used "
                                "that is not symmetric about the axis associated with the "
                                "reflected boundary.\n2) The reflecting boundary is not "
@@ -187,7 +187,7 @@ ReflectingBoundary::InitializeAngleDependent(const std::vector<LBSGroupset>& gro
   {
     const auto& quadrature = groupset.quadrature;
     auto& angle_agg = *(groupset.angle_agg);
-    auto num_angles = quadrature->omegas.size();
+    auto num_angles = quadrature->GetNumAngles();
     auto& extra_data = extra_data_[groupset.id];
     auto& map_dirnum = extra_data.map_dirnum;
     auto& reflected_anglenum = extra_data.reflected_anglenum;
@@ -204,7 +204,7 @@ ReflectingBoundary::InitializeAngleDependent(const std::vector<LBSGroupset>& gro
       unsigned int orthogonal_counter = 0;
       for (const auto& angle : angleset->GetAngleIndices())
       {
-        double dot = normal_.Dot(quadrature->omegas[angle]);
+        double dot = normal_.Dot(quadrature->GetOmega(angle));
         orthogonal_counter += (dot == 0);
         inout_counter += (dot > 0) - (dot < 0);
       }
@@ -249,7 +249,7 @@ ReflectingBoundary::GetFollowingAngleSets(int groupset_id,
   if (opposing_reflected_)
     return;
 
-  const auto& omegas = angle_agg.GetQuadrature()->omegas;
+  const auto& omegas = angle_agg.GetQuadrature()->GetOmegas();
   for (const auto& angle_idx : angleset.GetAngleIndices())
   {
     if (omegas[angle_idx].Dot(normal_) < 0.0)
