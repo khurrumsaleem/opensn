@@ -10,7 +10,9 @@
 #include "framework/math/petsc_utils/petsc_utils.h"
 #include "framework/runtime.h"
 #include "framework/logging/log.h"
+#include "framework/utils/caliper_scopes.h"
 #include "framework/utils/timer.h"
+#include "caliper/cali.h"
 #include <petscsnes.h>
 
 namespace opensn
@@ -30,6 +32,13 @@ GetNLKAGSContextPtr(const std::shared_ptr<NonLinearSolverContext>& context,
 }
 
 } // namespace
+
+void
+NLKEigenvalueAGSSolver::Solve()
+{
+  CaliperRegionScope cali_nl_method(options_.nl_method.c_str(), CaliperNLKEMethodScopeDepth());
+  PETScNonLinearSolver::Solve();
+}
 
 void
 NLKEigenvalueAGSSolver::PreSetupCallback()

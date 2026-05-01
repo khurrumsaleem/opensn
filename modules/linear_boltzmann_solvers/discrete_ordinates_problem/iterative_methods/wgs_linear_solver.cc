@@ -8,6 +8,7 @@
 #include "modules/linear_boltzmann_solvers/discrete_ordinates_problem/iterative_methods/sweep_wgs_context.h"
 #include "framework/math/petsc_utils/petsc_utils.h"
 #include "framework/logging/log.h"
+#include "framework/utils/caliper_scopes.h"
 #include "framework/utils/timer.h"
 #include "framework/runtime.h"
 #include <petscksp.h>
@@ -16,6 +17,27 @@
 
 namespace opensn
 {
+
+namespace
+{
+
+const char*
+WGSMethodName(LinearSystemSolver::IterativeMethod method)
+{
+  switch (method)
+  {
+    case LinearSystemSolver::IterativeMethod::PETSC_RICHARDSON:
+      return "Richardson";
+    case LinearSystemSolver::IterativeMethod::PETSC_GMRES:
+      return "GMRES";
+    case LinearSystemSolver::IterativeMethod::PETSC_BICGSTAB:
+      return "BiCGSTAB";
+    default:
+      return "WGSIteration";
+  }
+}
+
+} // namespace
 
 WGSLinearSolver::WGSLinearSolver(const std::shared_ptr<WGSContext>& gs_context_ptr)
   : PETScLinearSolver(gs_context_ptr->groupset.iterative_method, gs_context_ptr),
@@ -31,6 +53,15 @@ WGSLinearSolver::WGSLinearSolver(const std::shared_ptr<WGSContext>& gs_context_p
 WGSLinearSolver::~WGSLinearSolver()
 {
   OpenSnPETScCall(VecDestroy(&rhs_preconditioned_work_));
+}
+
+void
+WGSLinearSolver::Solve()
+{
+  CaliperPhaseScope cali_solve_phase("Solve", CaliperSolvePhaseDepth());
+  CaliperRegionScope cali_wgs("WGS", CaliperWGSScopeDepth());
+  CaliperRegionScope cali_method(WGSMethodName(method_), CaliperWGSMethodScopeDepth());
+  PETScLinearSolver::Solve();
 }
 
 void
@@ -140,7 +171,7 @@ WGSLinearSolver::SetInitialGuess()
 void
 WGSLinearSolver::SetRHS()
 {
-  CALI_CXX_MARK_SCOPE("WGSLinearSolver::SetRHS");
+  CALI_CXX_MARK_SCOPE("SetRHS");
 
   auto gs_context_ptr = std::dynamic_pointer_cast<WGSContext>(context_ptr_);
   auto& groupset = gs_context_ptr->groupset;
@@ -156,8 +187,11 @@ WGSLinearSolver::SetRHS()
   if (not single_richardson)
   {
     const auto scope = gs_context_ptr->rhs_src_scope | ZERO_INCOMING_DELAYED_PSI;
-    gs_context_ptr->set_source_function(
-      groupset, do_problem.GetQMomentsLocal(), do_problem.GetPhiOldLocal(), scope);
+    {
+      CALI_CXX_MARK_SCOPE("Source");
+      gs_context_ptr->set_source_function(
+        groupset, do_problem.GetQMomentsLocal(), do_problem.GetPhiOldLocal(), scope);
+    }
 
     // Enable RHS time (tau*psi^n)
     auto sweep_ctx = std::dynamic_pointer_cast<SweepWGSContext>(gs_context_ptr);
@@ -187,8 +221,11 @@ WGSLinearSolver::SetRHS()
   else
   {
     const auto scope = gs_context_ptr->rhs_src_scope | gs_context_ptr->lhs_src_scope;
-    gs_context_ptr->set_source_function(
-      groupset, do_problem.GetQMomentsLocal(), do_problem.GetPhiOldLocal(), scope);
+    {
+      CALI_CXX_MARK_SCOPE("Source");
+      gs_context_ptr->set_source_function(
+        groupset, do_problem.GetQMomentsLocal(), do_problem.GetPhiOldLocal(), scope);
+    }
 
     // Apply transport operator
     gs_context_ptr->ApplyInverseTransportOperator(scope);

@@ -9,7 +9,6 @@
 #include "modules/linear_boltzmann_solvers/discrete_ordinates_problem/sweep_chunks/cbcd_sweep_chunk.h"
 #include "modules/linear_boltzmann_solvers/discrete_ordinates_problem/discrete_ordinates_problem.h"
 #include "caribou/main.hpp"
-#include "caliper/cali.h"
 #include <thread>
 #include <vector>
 
@@ -19,8 +18,6 @@ namespace opensn
 void
 SweepScheduler::ScheduleAlgoAAO(SweepChunk& sweep_chunk)
 {
-  CALI_CXX_MARK_SCOPE("SweepScheduler::ScheduleAlgoAAO");
-
   // copy phi and src moments to device
   auto aah_sweep_chunk = static_cast<AAHDSweepChunk&>(sweep_chunk);
   int groupset_id = angle_agg_.GetGroupsetID();
@@ -85,8 +82,6 @@ SweepScheduler::ScheduleAlgoAAO(SweepChunk& sweep_chunk)
 void
 SweepScheduler::ScheduleAlgoAsyncFIFO(SweepChunk& sweep_chunk)
 {
-  CALI_CXX_MARK_SCOPE("SweepScheduler::ScheduleAlgoAsyncFIFO");
-
   // Reset dependency counter
   for (auto& angle_set : angle_agg_)
     angle_set->ResetDependencyCounter();
