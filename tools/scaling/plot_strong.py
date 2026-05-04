@@ -16,7 +16,7 @@ from generate_scaling_study import extra_data
 def extract_data(filename):
     """Extract n, average sweep time, and number of unknowns from a file."""
 
-    match = re.search(r'_(\d+)\.out$', filename)
+    match = re.search(r"_(\d+)\.out$", filename)
     if not match:
         return None
     n = int(match.group(1))
@@ -24,12 +24,18 @@ def extract_data(filename):
     avg_time = None
     num_unknowns = None
 
-    with open(filename, 'r') as f:
+    avg_time_re = re.compile(r"avg_sweep_time\s*=\s*([0-9.eE+-]+)\s*s")
+    unknowns_re = re.compile(r"\bunknowns\s*=\s*([0-9.eE+-]+)")
+
+    with open(filename, "r") as f:
         for line in f:
-            if "Average sweep time" in line:
-                avg_time = float(line.split()[-1])
-            elif "Number of unknowns per sweep" in line:
-                num_unknowns = float(line.split()[-1])
+            avg_match = avg_time_re.search(line)
+            if avg_match:
+                avg_time = float(avg_match.group(1))
+
+            unknowns_match = unknowns_re.search(line)
+            if unknowns_match:
+                num_unknowns = float(unknowns_match.group(1))
 
     if avg_time is None or num_unknowns is None:
         return None
@@ -49,19 +55,20 @@ def plot_data(data, output_file, with_history):
     if with_history and (Path(__file__).resolve().parent / "history.yaml").exists():
         with open("history.yaml", "r") as f:
             history_dict = yaml.safe_load(f)
-        history_label = f"{extra_data['name']}_strong_scaling"
+        name = extra_data["name"]
+        history_label = f"{name}_strong_scaling"
         if history_dict is not None and history_label in history_dict:
             history_data = history_dict[history_label]
             history["nodes"] = history_data["nodes"]
             history["sweep_time"] = [t * 1e9 for t in history_data["sweep_time"]]
 
     fig, ax = plt.subplots()
-    ax.plot(n_nodes, ideal, linestyle='--', color='xkcd:sky blue', label='ideal')
-    ax.plot(n_nodes, sweep_time, marker='o', color='xkcd:cerulean', label='sweep time')
+    ax.plot(n_nodes, ideal, linestyle="--", color="xkcd:sky blue", label="ideal")
+    ax.plot(n_nodes, sweep_time, marker="o", color="xkcd:cerulean", label="sweep time")
     xticks = n_nodes.copy()
     if history:
-        ax.plot(history["nodes"], history["sweep_time"], marker='o',
-                color='xkcd:coral', label='history')
+        ax.plot(history["nodes"], history["sweep_time"], marker="o",
+                color="xkcd:coral", label="history")
         xticks = sorted(set(n_nodes) | set(history["nodes"]))
     elif with_history:
         warnings.warn(
@@ -69,14 +76,14 @@ def plot_data(data, output_file, with_history):
             "Plotting without history."
         )
     ax.set_xlabel("Number of nodes")
-    ax.set_xscale('log')
+    ax.set_xscale("log")
     ax.set_xticks(xticks, xticks)
     ax.xaxis.set_minor_locator(NullLocator())
     ax.set_ylabel("Average sweep time per unknown (ns)")
-    ax.set_yscale('log')
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%g'))
+    ax.set_yscale("log")
+    ax.yaxis.set_major_formatter(FormatStrFormatter("%g"))
     ax.set_title("Node-to-node strong scaling")
-    ax.grid(True, which='both')
+    ax.grid(True, which="both")
     ax.legend()
     fig.savefig(output_file)
     plt.show()
@@ -85,7 +92,8 @@ def plot_data(data, output_file, with_history):
 def export_data(data, output_file):
     """Export data to a YAML file."""
 
-    label = f"{extra_data['name']}_strong_scaling"
+    name = extra_data["name"]
+    label = f"{name}_strong_scaling"
     export_dict = None
     if (Path(__file__).resolve().parent / "history.yaml").exists():
         with open(output_file, "r") as f:
@@ -93,7 +101,7 @@ def export_data(data, output_file):
     if export_dict is None:
         export_dict = {}
     export_dict[label] = {
-        "description": extra_data['description'],
+        "description": extra_data["description"],
         "time": datetime.now().isoformat(),
         "nodes": [d[0] for d in data],
         "sweep_time": [d[1] for d in data]
@@ -113,6 +121,12 @@ if __name__ == "__main__":
         help="Filename for the output plot (default: strong_scaling_plot.pdf)."
     )
     parser.add_argument(
+        "--dir",
+        type=str,
+        default="output/strong_cpu",
+        help="Folder to find strong scaling result (default: output/strong_cpu)."
+    )
+    parser.add_argument(
         "--history",
         type=str,
         choices=["none", "comp", "save"],
@@ -128,7 +142,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # get files matching the prefix in the input directory
-    input_dir = Path(__file__).resolve().parent / "output/strong"
+    input_dir = Path(__file__).resolve().parent / args.dir
     if not input_dir.exists():
         raise FileNotFoundError(f"Input directory {input_dir} does not exist.")
     files = glob.glob(f"{input_dir}/strong_*.out")
