@@ -6,8 +6,8 @@
 #include "framework/mesh/mesh.h"
 #include "framework/runtime.h"
 #include "framework/logging/log.h"
-#include <format>
 #include <cmath>
+#include <sstream>
 
 namespace opensn
 {
@@ -62,9 +62,10 @@ KBAGraphPartitioner::KBAGraphPartitioner(const InputParameters& params)
     // Check number of items
     if (cuts.size() != (n - 1))
     {
-      auto err = std::format(
-        "The number of cuts supplied for \"{}cuts\" is not equal to n{}-1.", name, name);
-      OpenSnInvalidArgument(err);
+      std::ostringstream err;
+      err << "The number of cuts supplied for \"" << name << "cuts\" is not equal to n" << name
+          << "-1.";
+      OpenSnInvalidArgument(err.str());
     }
     if (cuts.empty())
       continue;
@@ -74,9 +75,12 @@ KBAGraphPartitioner::KBAGraphPartitioner(const InputParameters& params)
       double prev_value = 0.0;
       for (const double cut_value : *cuts_ptr)
       {
-        OpenSnInvalidArgumentIf(cut_value != cuts.front() and cut_value <= prev_value,
-                                "Parameter \"" + name +
-                                  "\" requires monotonically increasing values");
+        if (cut_value != cuts.front() and cut_value <= prev_value)
+        {
+          std::ostringstream err;
+          err << "Parameter \"" << name << "\" requires monotonically increasing values";
+          OpenSnInvalidArgument(err.str());
+        }
         prev_value = cut_value;
       }
     } // for cut value

@@ -13,7 +13,7 @@
 #include <vtkAppendFilter.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
-#include <format>
+#include <sstream>
 
 namespace opensn
 {
@@ -306,11 +306,10 @@ ConsolidateGridBlocks(std::vector<vtkUGridPtrAndName>& ugrid_blocks,
 
     if (not has_block_ids)
     {
-      auto err = std::format("{}: Grid block {} does not have \"{}\" array.",
-                             fname,
-                             ugrid_name.second,
-                             block_id_array_name);
-      throw std::logic_error(err);
+      std::ostringstream err;
+      err << fname << ": Grid block " << ugrid_name.second << " does not have \""
+          << block_id_array_name << "\" array.";
+      throw std::logic_error(err.str());
     }
   } // for grid_name pairs
 
