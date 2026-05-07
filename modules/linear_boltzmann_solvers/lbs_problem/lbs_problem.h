@@ -32,7 +32,7 @@ class TotalXSCarrier;
 class OutflowCarrier;
 class MeshCarrier;
 template <typename T>
-class MemoryPinner;
+class DeviceVectorMirror;
 
 /**
  * Base class for all Linear Boltzmann Solvers.
@@ -192,11 +192,11 @@ public:
   MeshCarrier* GetMeshCarrier() { return mesh_carrier_.get(); }
   const MeshCarrier* GetMeshCarrier() const { return mesh_carrier_.get(); }
 
-  MemoryPinner<double>* GetSourceMomentsPinner() { return source_pinner_.get(); }
-  const MemoryPinner<double>* GetSourceMomentsPinner() const { return source_pinner_.get(); }
+  DeviceVectorMirror<double>* GetSourceMomentsPinner() { return source_pinner_.get(); }
+  const DeviceVectorMirror<double>* GetSourceMomentsPinner() const { return source_pinner_.get(); }
 
-  MemoryPinner<double>* GetPhiPinner() { return phi_pinner_.get(); }
-  const MemoryPinner<double>* GetPhiPinner() const { return phi_pinner_.get(); }
+  DeviceVectorMirror<double>* GetPhiPinner() { return phi_pinner_.get(); }
+  const DeviceVectorMirror<double>* GetPhiPinner() const { return phi_pinner_.get(); }
 
   /// Discretization and local transport data.
   /// Obtains a reference to the spatial discretization.
@@ -380,8 +380,8 @@ protected:
   std::shared_ptr<MeshCarrier> mesh_carrier_ = nullptr;
 
   /// Memory pinners for source moments and destination phi.
-  std::shared_ptr<MemoryPinner<double>> source_pinner_ = nullptr;
-  std::shared_ptr<MemoryPinner<double>> phi_pinner_ = nullptr;
+  std::shared_ptr<DeviceVectorMirror<double>> source_pinner_ = nullptr;
+  std::shared_ptr<DeviceVectorMirror<double>> phi_pinner_ = nullptr;
 
   /// Flag indicating if GPU acceleration is enabled.
   bool use_gpus_;

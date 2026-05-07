@@ -28,8 +28,7 @@ CBCD_AngleSet::CBCD_AngleSet(size_t id,
     stream_(),
     device_angle_indices_(angles_.size())
 {
-  crb::MemoryPinningManager angle_indices_pinner_(angles_);
-  crb::copy(device_angle_indices_, angle_indices_pinner_, angles_.size(), 0, 0, stream_);
+  SyncDeviceAngleIndices();
   // Set CBCD_FLUDS stream and asynchronously allocate storage for local psi
   auto* cbcd_fluds = std::static_pointer_cast<CBCD_FLUDS>(fluds_).get();
   cbcd_fluds->GetStream() = stream_;
@@ -75,8 +74,7 @@ CBCD_AngleSet::UpdateDependencyCounters()
 void
 CBCD_AngleSet::SyncDeviceAngleIndices()
 {
-  crb::MemoryPinningManager angle_indices_pinner_(angles_);
-  crb::copy(device_angle_indices_, angle_indices_pinner_, angles_.size());
+  crb::copy(device_angle_indices_, angles_, angles_.size());
 }
 
 } // namespace opensn

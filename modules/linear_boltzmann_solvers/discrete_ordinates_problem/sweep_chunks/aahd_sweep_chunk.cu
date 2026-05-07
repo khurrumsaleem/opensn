@@ -9,7 +9,7 @@
 #include "modules/linear_boltzmann_solvers/discrete_ordinates_problem/sweep/fluds/aahd_fluds.h"
 #include "modules/linear_boltzmann_solvers/discrete_ordinates_problem/sweep/spds/aah.h"
 #include "modules/linear_boltzmann_solvers/lbs_problem/device/carrier/mesh_carrier.h"
-#include "modules/linear_boltzmann_solvers/lbs_problem/device/memory_pinner.h"
+#include "modules/linear_boltzmann_solvers/lbs_problem/device/device_vector_mirror.h"
 #include "caliper/cali.h"
 #include "caribou/main.hpp"
 

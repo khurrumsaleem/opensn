@@ -28,8 +28,7 @@ AAHD_AngleSet::AAHD_AngleSet(size_t id,
   auto aahd_fluds = std::dynamic_pointer_cast<AAHD_FLUDS>(fluds_);
   aahd_fluds->GetStream() = stream_;
   aahd_fluds->GetCommonData().AddAssociatedAngleSet(this);
-  crb::MemoryPinningManager<std::uint32_t> pin(angles_);
-  crb::copy(device_angle_indices_, pin, angles_.size());
+  SyncDeviceAngleIndices();
 }
 
 void
@@ -99,8 +98,7 @@ AAHD_AngleSet::AngleSetAdvance(SweepChunk& sweep_chunk, AngleSetStatus permissio
 void
 AAHD_AngleSet::SyncDeviceAngleIndices()
 {
-  crb::MemoryPinningManager<std::uint32_t> pin(angles_);
-  crb::copy(device_angle_indices_, pin, angles_.size());
+  crb::copy(device_angle_indices_, angles_, angles_.size());
 }
 
 void
@@ -111,9 +109,8 @@ AAHD_AngleSet::CopyBoundaryOffsetToDevice()
     device_boundary_offsets_.reset();
     return;
   }
-  crb::MemoryPinningManager<std::uint64_t> pin(host_boundary_offsets_);
   device_boundary_offsets_ = crb::DeviceMemory<std::uint64_t>(host_boundary_offsets_.size());
-  crb::copy(device_boundary_offsets_, pin, host_boundary_offsets_.size());
+  crb::copy(device_boundary_offsets_, host_boundary_offsets_, host_boundary_offsets_.size());
   host_boundary_offsets_.clear();
 }
 

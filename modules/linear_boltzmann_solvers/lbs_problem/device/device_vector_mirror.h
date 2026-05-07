@@ -17,23 +17,23 @@ namespace opensn
  * its associated memory on GPU.
  */
 template <typename T>
-class MemoryPinner
+class DeviceVectorMirror
 {
 public:
   /// Constructor.
-  MemoryPinner(std::vector<T>& src) : pinned_host_(src), device_(src.size()) {}
+  DeviceVectorMirror(std::vector<T>& src) : host_(src), device_(src.size()) {}
 
   /// Copy data to GPU.
-  void CopyToDevice() { crb::copy(device_, pinned_host_, pinned_host_.size()); }
+  void CopyToDevice() { crb::copy(device_, host_, host_.size()); }
 
   /// Copy data from GPU.
-  void CopyFromDevice() { crb::copy(pinned_host_, device_, pinned_host_.size()); }
+  void CopyFromDevice() { crb::copy(host_, device_, host_.size()); }
 
   /// Get pointer to device memory.
   inline T* GetDevicePtr() { return device_.get(); }
 
 protected:
-  crb::MemoryPinningManager<T> pinned_host_;
+  std::vector<T>& host_;
   crb::DeviceMemory<T> device_;
 };
 

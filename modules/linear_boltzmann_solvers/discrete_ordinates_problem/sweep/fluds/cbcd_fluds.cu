@@ -36,13 +36,13 @@ CBCD_FLUDS::CBCD_FLUDS(size_t num_groups,
     cell_to_outgoing_boundary_nodes_(common_data_.GetOutgoingBoundaryNodeMap()),
     cell_to_incoming_nonlocal_nodes_(common_data_.GetIncomingNonlocalNodeMap()),
     cell_to_outgoing_nonlocal_nodes_(common_data_.GetOutgoingNonlocalNodeMap()),
-    local_psi_(local_psi_data_size_),
     incoming_boundary_psi_(common_data_.GetNumIncomingBoundaryNodes() * num_groups_and_angles_),
     outgoing_boundary_psi_(common_data_.GetNumOutgoingBoundaryNodes() * num_groups_and_angles_),
     incoming_nonlocal_psi_(common_data_.GetNumIncomingNonlocalNodes() * num_groups_and_angles_),
     outgoing_nonlocal_psi_(common_data_.GetNumOutgoingNonlocalNodes() * num_groups_and_angles_),
     local_cell_ids_(num_local_cells),
-    save_angular_flux_(save_angular_flux)
+    save_angular_flux_(save_angular_flux),
+    local_psi_(local_psi_data_size_)
 {
   if (save_angular_flux_ and host_saved_psi_.empty())
   {

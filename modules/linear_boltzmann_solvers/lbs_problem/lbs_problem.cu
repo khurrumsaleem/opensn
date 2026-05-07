@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 #include "modules/linear_boltzmann_solvers/lbs_problem/lbs_problem.h"
-#include "modules/linear_boltzmann_solvers/lbs_problem/device/memory_pinner.h"
 #include "modules/linear_boltzmann_solvers/lbs_problem/device/carrier/mesh_carrier.h"
 #include "modules/linear_boltzmann_solvers/lbs_problem/device/carrier/outflow_carrier.h"
 #include "modules/linear_boltzmann_solvers/lbs_problem/device/carrier/total_xs_carrier.h"
+#include "modules/linear_boltzmann_solvers/lbs_problem/device/device_vector_mirror.h"
 #include "framework/utils/error.h"
 
 namespace opensn
@@ -24,8 +24,8 @@ LBSProblem::InitializeGPUExtras()
   outflow_carrier_ = std::make_shared<OutflowCarrier>(*this);
   mesh_carrier_ = std::make_shared<MeshCarrier>(*this, *total_xs_carrier_, *outflow_carrier_);
   // initialize pinners
-  source_pinner_ = std::make_shared<MemoryPinner<double>>(q_moments_local_);
-  phi_pinner_ = std::make_shared<MemoryPinner<double>>(phi_new_local_);
+  source_pinner_ = std::make_shared<DeviceVectorMirror<double>>(q_moments_local_);
+  phi_pinner_ = std::make_shared<DeviceVectorMirror<double>>(phi_new_local_);
 }
 
 void

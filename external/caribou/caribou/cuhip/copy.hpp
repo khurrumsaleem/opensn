@@ -21,14 +21,31 @@ void async_copy(T * dst, const T * src, std::size_t n, StreamNativeHandle stream
     check_error(error);
 }
 
+template <typename T, ::GPU_API(MemcpyKind) CopyKind>
+void sync_copy(T * dst, const T * src, std::size_t n) {
+    ::GPU_API(Error_t) error = ::GPU_API(Memcpy)(reinterpret_cast<void *>(dst), reinterpret_cast<const void *>(src),
+                                                 n * sizeof(T), CopyKind);
+    check_error(error);
+}
+
 template <typename T>
 void copy_h2d(T * dst, const T * src, std::size_t n, StreamNativeHandle stream) {
     async_copy<T, ::GPU_API(MemcpyHostToDevice)>(dst, src, n, stream);
 }
 
 template <typename T>
+void copy_h2d(T * dst, const T * src, std::size_t n) {
+    sync_copy<T, ::GPU_API(MemcpyHostToDevice)>(dst, src, n);
+}
+
+template <typename T>
 void copy_d2h(T * dst, const T * src, std::size_t n, StreamNativeHandle stream) {
     async_copy<T, ::GPU_API(MemcpyDeviceToHost)>(dst, src, n, stream);
+}
+
+template <typename T>
+void copy_d2h(T * dst, const T * src, std::size_t n) {
+    sync_copy<T, ::GPU_API(MemcpyDeviceToHost)>(dst, src, n);
 }
 
 template <typename T>

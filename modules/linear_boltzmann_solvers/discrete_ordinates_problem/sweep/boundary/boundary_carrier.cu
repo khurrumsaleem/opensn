@@ -30,18 +30,16 @@ void
 BoundaryCarrier::UploadToDevice(int groupset_id)
 {
   auto& host_data = bank_[groupset_id].boundary_flux;
-  crb::MemoryPinningManager<double> host_pinner(host_data);
   auto& device_data = device_boundary_flux_[groupset_id];
-  crb::copy(device_data, host_pinner, host_pinner.size());
+  crb::copy(device_data, host_data, host_data.size());
 }
 
 void
 BoundaryCarrier::DownloadToHost(int groupset_id)
 {
   auto& host_data = bank_[groupset_id].boundary_flux;
-  crb::MemoryPinningManager<double> host_pinner(host_data);
   auto& device_data = device_boundary_flux_[groupset_id];
-  crb::copy(host_pinner, device_data, host_pinner.size());
+  crb::copy(host_data, device_data, host_data.size());
 }
 
 } // namespace opensn
