@@ -729,7 +729,7 @@ DiscreteOrdinatesProblem::ResetMode(SweepChunkMode target_mode)
         // Keep source moments and scalar flux fixed at converged steady-state values.
         GetQMomentsLocal() = q_moments_ref;
         GetPhiOldLocal() = phi_new_ref;
-        wgs_context->RebuildAngularFluxFromConvergedPhi(false);
+        wgs_context->RebuildAngularFluxFromConvergedPhi(false, pass == 0);
 
         const auto delayed_psi_new =
           wgs_context->groupset.angle_agg->GetNewDelayedAngularDOFsAsSTLVector();
@@ -2065,9 +2065,11 @@ DiscreteOrdinatesProblem::UpdatePsiOld()
 }
 
 bool
-DiscreteOrdinatesProblem::ReadProblemRestartData(hid_t file_id)
+DiscreteOrdinatesProblem::ReadProblemRestartData(hid_t file_id,
+                                                 bool allow_transient_initialization_from_steady)
 {
-  return DiscreteOrdinatesProblemIO::ReadRestartData(*this, file_id);
+  return DiscreteOrdinatesProblemIO::ReadRestartData(
+    *this, file_id, allow_transient_initialization_from_steady);
 }
 
 bool
