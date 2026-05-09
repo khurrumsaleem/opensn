@@ -22,6 +22,6 @@ elseif(OPENSN_WITH_SYCL)
         $<INSTALL_INTERFACE:include>
   )
   target_compile_features(libcaribou PUBLIC cxx_std_20)
-  target_compile_options(libcaribou PRIVATE -fsycl -fsycl-targets=spir64_gen -Xsycl-target-backend "-device pvc")
-  target_link_options(libcaribou PRIVATE -fsycl -fsycl-targets=spir64_gen -Xsycl-target-backend "-device pvc")
+  target_compile_options(libcaribou PRIVATE ${OPENSN_SYCL_COMPILE_OPTIONS})
+  target_link_options(libcaribou PRIVATE ${OPENSN_SYCL_LINK_OPTIONS})
 endif()
