@@ -5,8 +5,6 @@ import os
 import warnings
 import shutil
 import time
-from nbconvert import PythonExporter
-import nbformat
 from . import checks
 from . import test_slot
 
@@ -296,6 +294,16 @@ def ConvertNbToScript(notebook_path: str) -> str:
     # Return old file name if it is not a notebook
     if not notebook_path.endswith(".ipynb"):
         return notebook_path
+
+    try:
+        from nbconvert import PythonExporter
+        import nbformat
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "Jupyter notebook tests require nbconvert and nbformat. "
+            "Install them or run the regression suite with --engine console."
+        ) from exc
+
     # Read notebook
     nb_node = nbformat.read(notebook_path, as_version=4)
     # Create exporter
