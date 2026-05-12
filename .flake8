@@ -3,7 +3,9 @@ ignore = E203, E266, W503, C901, E741
 max-line-length = 100
 max-complexity = 18
 select = B,C,E,F,W,T4,B9
-extend-exclude = build*
+extend-exclude =
+    build*
+    distribution/spack/packages/*
 
 per-file-ignores =
     test/python/*.py: F401, F821
