@@ -841,6 +841,31 @@ LBSProblem::InitializeGroupsets(const InputParameters& params)
       oss << GetName() << ": No groups added to groupset " << groupsets_.back().id;
       OpenSnInvalidArgument(oss.str());
     }
+
+    if (groupsets_.back().last_group >= num_groups_)
+    {
+      std::stringstream oss;
+      oss << GetName() << ": Groupset " << groupsets_.back().id << " has last group "
+          << groupsets_.back().last_group << ", but the problem only has " << num_groups_
+          << " groups.";
+      OpenSnInvalidArgument(oss.str());
+    }
+
+    if (gs > 0)
+    {
+      const auto& previous_groupset = groupsets_[gs - 1];
+      const auto& current_groupset = groupsets_.back();
+      const auto expected_first_group = previous_groupset.last_group + 1;
+      if (current_groupset.first_group != expected_first_group)
+      {
+        std::stringstream oss;
+        oss << GetName() << ": Groupset " << current_groupset.id << " starts at group "
+            << current_groupset.first_group << ", but it should start at group "
+            << expected_first_group << " to be consecutive with groupset " << previous_groupset.id
+            << ".";
+        OpenSnInvalidArgument(oss.str());
+      }
+    }
   }
 }
 
