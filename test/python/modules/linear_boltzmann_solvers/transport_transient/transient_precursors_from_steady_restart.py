@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     dt = 0.05
     xs = MultiGroupXS()
-    xs.LoadFromOpenSn(os.path.join(os.path.dirname(__file__), "xs1g_delayed_crit_1p.cxs"))
+    xs.LoadFromOpenSn("../../../../assets/xs/xs1g_delayed_crit_1p.cxs")
 
     source = VolumetricSource(block_ids=[0], group_strength=[0.5], start_time=0.0, end_time=10.0)
     quadrature = GLProductQuadrature1DSlab(n_polar=4, scattering_order=0)

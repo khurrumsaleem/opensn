@@ -52,7 +52,7 @@ def build_mesh():
 
 def build_xs():
     xs = MultiGroupXS()
-    xs.LoadFromOpenSn("simple_upscatter.xs")
+    xs.LoadFromOpenSn("../../../../assets/xs/simple_upscatter.xs")
     return xs
 
 
