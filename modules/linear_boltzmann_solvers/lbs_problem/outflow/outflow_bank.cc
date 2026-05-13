@@ -30,7 +30,7 @@ OutflowBank::OutflowBank(const MeshContinuum& grid, unsigned int num_groups)
   std::size_t num_boundary_faces = 0;
   for (const auto& cell : grid.local_cells)
   {
-    std::size_t face_offset_count = 0;
+    std::int64_t face_offset_count = 0;
     for (std::size_t f = 0; f < cell.faces.size(); ++f)
     {
       const auto& face = cell.faces[f];
@@ -43,7 +43,7 @@ OutflowBank::OutflowBank(const MeshContinuum& grid, unsigned int num_groups)
         cell_view.InitializeFaceOffsets();
         cell_offsets[cell.local_id] = static_cast<std::int64_t>(num_boundary_faces);
       }
-      cell_view.SetFaceOffset(f, static_cast<std::int64_t>(face_offset_count * num_groups));
+      cell_view.SetFaceOffset(f, face_offset_count * num_groups);
       ++face_offset_count;
       cellface_map_[Merge(cell.local_id, f)] = num_boundary_faces * num_groups;
       num_boundary_faces++;
