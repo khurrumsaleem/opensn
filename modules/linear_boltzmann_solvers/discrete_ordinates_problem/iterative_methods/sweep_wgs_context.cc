@@ -9,6 +9,7 @@
 #include "framework/logging/log.h"
 #include "framework/runtime.h"
 #include "framework/utils/timer.h"
+#include "framework/utils/caliper_scopes.h"
 #include "caliper/cali.h"
 #include <petscksp.h>
 
@@ -63,10 +64,16 @@ void
 SweepWGSContext::RebuildAngularFluxFromConvergedPhi(bool include_rhs_time_term,
                                                     bool zero_incoming_delayed_psi)
 {
+  CALI_CXX_MARK_SCOPE("AngularFluxReconstruction");
+
   auto scope = lhs_src_scope | rhs_src_scope;
   if (zero_incoming_delayed_psi)
     scope |= ZERO_INCOMING_DELAYED_PSI;
-  set_source_function(groupset, do_problem.GetQMomentsLocal(), do_problem.GetPhiOldLocal(), scope);
+  {
+    CALI_CXX_MARK_SCOPE("Source");
+    set_source_function(
+      groupset, do_problem.GetQMomentsLocal(), do_problem.GetPhiOldLocal(), scope);
+  }
 
   sweep_chunk->IncludeRHSTimeTerm(include_rhs_time_term);
   ApplyInverseTransportOperator(scope);
@@ -77,7 +84,6 @@ SweepWGSContext::RebuildAngularFluxFromConvergedPhi(bool include_rhs_time_term,
 void
 SweepWGSContext::SetPreconditioner(KSP& solver)
 {
-  CALI_CXX_MARK_SCOPE("SweepWGSContext::SetPreconditioner");
 
   auto& ksp = solver;
 
@@ -98,7 +104,6 @@ SweepWGSContext::SetPreconditioner(KSP& solver)
 std::pair<int64_t, int64_t>
 SweepWGSContext::GetSystemSize()
 {
-  CALI_CXX_MARK_SCOPE("SweepWGSContext::SystemSize");
 
   const size_t local_node_count = do_problem.GetLocalNodeCount();
   const auto global_node_count = do_problem.GetGlobalNodeCount();
@@ -135,7 +140,7 @@ SweepWGSContext::PreSolveCallback()
 void
 SweepWGSContext::ApplyInverseTransportOperator(SourceFlags scope)
 {
-  CALI_CXX_MARK_SCOPE("SweepWGSContext::ApplyInverseTransportOperator");
+  CaliperRegionScope cali_sweep_region("Sweep", CaliperSweepScopeDepth());
 
   ++counter_applications_of_inv_op;
 
@@ -159,7 +164,6 @@ SweepWGSContext::ApplyInverseTransportOperator(SourceFlags scope)
 void
 SweepWGSContext::PostSolveCallback()
 {
-  CALI_CXX_MARK_SCOPE("SweepWGSContext::PostSolveCallback");
 
   // Perform final sweep with converged phi and delayed psi dofs. This step is necessary for
   // Krylov methods to recover the actual solution (this includes all of the PETSc methods

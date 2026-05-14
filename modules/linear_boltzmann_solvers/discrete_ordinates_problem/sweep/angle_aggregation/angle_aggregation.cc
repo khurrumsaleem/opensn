@@ -32,7 +32,6 @@ AngleAggregation::AngleAggregation(const LBSGroupset& groupset,
 void
 AngleAggregation::ZeroOutgoingDelayedPsi()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::ZeroOutgoingDelayedPsi");
 
   for (auto& angset : angle_set_groups_)
     for (auto& delayed_data : angset->GetFLUDS().DelayedPrelocIOutgoingPsi())
@@ -47,7 +46,6 @@ AngleAggregation::ZeroOutgoingDelayedPsi()
 void
 AngleAggregation::ZeroIncomingDelayedPsi()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::ZeroIncomingDelayedPsi");
 
   // Opposing reflecting bndries
   for (const auto& [bid, bndry] : boundaries_)
@@ -91,7 +89,7 @@ AngleAggregation::ResetAngleSetDependencies()
 void
 AngleAggregation::SetupAngleSetDependencies()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::SetupAngleSetDependencies");
+  CALI_CXX_MARK_SCOPE("AngleSetDependencies");
 
   ResetAngleSetDependencies();
 
@@ -141,7 +139,6 @@ AngleAggregation::SetupAngleSetDependencies()
 std::pair<size_t, size_t>
 AngleAggregation::GetNumDelayedAngularDOFs()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::GetNumDelayedAngularDOFs");
 
   // Check if this is already developed
   if (num_ang_unknowns_avail_)
@@ -174,7 +171,6 @@ AngleAggregation::GetNumDelayedAngularDOFs()
 void
 AngleAggregation::AppendNewDelayedAngularDOFsToArray(int64_t& index, double* x_ref)
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::AppendNewDelayedAngularDOFsToArray");
 
   for (auto& [bid, bndry] : boundaries_)
     bndry->AppendNewDelayedAngularDOFsToArray(groupset_id_, index, x_ref);
@@ -200,7 +196,6 @@ AngleAggregation::AppendNewDelayedAngularDOFsToArray(int64_t& index, double* x_r
 void
 AngleAggregation::AppendOldDelayedAngularDOFsToArray(int64_t& index, double* x_ref)
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::AppendOldDelayedAngularDOFsToArray");
 
   for (auto& [bid, bndry] : boundaries_)
     bndry->AppendOldDelayedAngularDOFsToArray(groupset_id_, index, x_ref);
@@ -226,7 +221,6 @@ AngleAggregation::AppendOldDelayedAngularDOFsToArray(int64_t& index, double* x_r
 void
 AngleAggregation::SetOldDelayedAngularDOFsFromArray(int64_t& index, const double* x_ref)
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::SetOldDelayedAngularDOFsFromArray");
 
   for (auto& [bid, bndry] : boundaries_)
     bndry->SetOldDelayedAngularDOFsFromArray(groupset_id_, index, x_ref);
@@ -252,7 +246,6 @@ AngleAggregation::SetOldDelayedAngularDOFsFromArray(int64_t& index, const double
 void
 AngleAggregation::SetNewDelayedAngularDOFsFromArray(int64_t& index, const double* x_ref)
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::SetNewDelayedAngularDOFsFromArray");
 
   for (auto& [bid, bndry] : boundaries_)
     bndry->SetNewDelayedAngularDOFsFromArray(groupset_id_, index, x_ref);
@@ -278,7 +271,6 @@ AngleAggregation::SetNewDelayedAngularDOFsFromArray(int64_t& index, const double
 std::vector<double>
 AngleAggregation::GetNewDelayedAngularDOFsAsSTLVector()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::GetNewDelayedAngularDOFsAsSTLVector");
 
   std::vector<double> psi_vector;
 
@@ -305,7 +297,6 @@ AngleAggregation::GetNewDelayedAngularDOFsAsSTLVector()
 void
 AngleAggregation::SetNewDelayedAngularDOFsFromSTLVector(const std::vector<double>& stl_vector)
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::SetNewDelayedAngularDOFsFromSTLVector");
 
   auto psi_size = GetNumDelayedAngularDOFs();
   size_t stl_size = stl_vector.size();
@@ -334,7 +325,6 @@ AngleAggregation::SetNewDelayedAngularDOFsFromSTLVector(const std::vector<double
 std::vector<double>
 AngleAggregation::GetOldDelayedAngularDOFsAsSTLVector()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::GetOldDelayedAngularDOFsAsSTLVector");
 
   std::vector<double> psi_vector;
 
@@ -361,7 +351,6 @@ AngleAggregation::GetOldDelayedAngularDOFsAsSTLVector()
 void
 AngleAggregation::SetOldDelayedAngularDOFsFromSTLVector(const std::vector<double>& stl_vector)
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::SetOldDelayedAngularDOFsFromSTLVector");
 
   auto psi_size = GetNumDelayedAngularDOFs();
   size_t stl_size = stl_vector.size();
@@ -390,7 +379,6 @@ AngleAggregation::SetOldDelayedAngularDOFsFromSTLVector(const std::vector<double
 void
 AngleAggregation::SetDelayedPsiOld2New()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::SetDelayedPsiOld2New");
 
   for (auto& [bid, bndry] : boundaries_)
     bndry->CopyDelayedAngularFluxOldToNew(groupset_id_);
@@ -407,7 +395,6 @@ AngleAggregation::SetDelayedPsiOld2New()
 void
 AngleAggregation::SetDelayedPsiNew2Old()
 {
-  CALI_CXX_MARK_SCOPE("AngleAggregation::SetDelayedPsiNew2Old");
 
   for (auto& [bid, bndry] : boundaries_)
     bndry->CopyDelayedAngularFluxNewToOld(groupset_id_);

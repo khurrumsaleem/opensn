@@ -37,6 +37,7 @@
 #include "framework/math/spatial_discretization/finite_element/piecewise_linear/piecewise_linear_discontinuous.h"
 #include "framework/logging/log.h"
 #include "framework/utils/error.h"
+#include "framework/utils/caliper_scopes.h"
 #include "framework/utils/timer.h"
 #include "framework/utils/utils.h"
 #include "framework/runtime.h"
@@ -191,8 +192,11 @@ DiscreteOrdinatesProblem::Create(const ParameterBlock& params)
   input_params.SetErrorOriginScope("lbs::DiscreteOrdinatesProblem");
   input_params.AssignParameters(params);
 
-  auto problem =
-    std::shared_ptr<DiscreteOrdinatesProblem>(new DiscreteOrdinatesProblem(input_params));
+  std::shared_ptr<DiscreteOrdinatesProblem> problem;
+  {
+    CaliperPhaseScope cali_setup_phase("Setup", CaliperSetupPhaseDepth());
+    problem = std::shared_ptr<DiscreteOrdinatesProblem>(new DiscreteOrdinatesProblem(input_params));
+  }
   problem->discretization_ = discretization;
   problem->BuildRuntime();
   return problem;
@@ -286,7 +290,6 @@ DiscreteOrdinatesProblem::DiscreteOrdinatesProblem(const InputParameters& params
 
 DiscreteOrdinatesProblem::~DiscreteOrdinatesProblem()
 {
-  CALI_CXX_MARK_FUNCTION;
 
   ResetBoundaryCarrier();
 
@@ -304,7 +307,6 @@ DiscreteOrdinatesProblem::~DiscreteOrdinatesProblem()
 std::pair<std::uint64_t, std::uint64_t>
 DiscreteOrdinatesProblem::GetNumPhiIterativeUnknowns()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::GetNumPhiIterativeUnknowns");
   const auto& sdm = *discretization_;
   const auto num_local_phi_dofs = sdm.GetNumLocalDOFs(flux_moments_uk_man_);
   const auto num_global_phi_dofs = sdm.GetNumGlobalDOFs(flux_moments_uk_man_);
@@ -520,7 +522,7 @@ DiscreteOrdinatesProblem::PrintSimHeader()
 void
 DiscreteOrdinatesProblem::BuildRuntime()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::BuildRuntime");
+  CaliperPhaseScope cali_setup_phase("Setup", CaliperSetupPhaseDepth());
 
   if (boundary_conditions_block_)
   {
@@ -575,6 +577,7 @@ DiscreteOrdinatesProblem::BuildRuntime()
     WGDSA::Init(*this, groupset);
     TGDSA::Init(*this, groupset);
   }
+
   log.Log() << program_timer.GetTimeString() << " Initialized angle aggregation.";
 
   // Initialize runtime boundary data
@@ -636,7 +639,6 @@ DiscreteOrdinatesProblem::RebuildBoundaryRuntimeData()
 void
 DiscreteOrdinatesProblem::InitializeSolverSchemes()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::InitializeSolverSchemes");
   ags_solver_.reset();
   wgs_solvers_.clear();
   wgs_contexts_.clear();
@@ -951,7 +953,7 @@ DiscreteOrdinatesProblem::UpdateAngularFluxStorage()
 void
 DiscreteOrdinatesProblem::InitializeBoundaries()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::InitializeBoundaries");
+  CALI_CXX_MARK_SCOPE("Boundaries");
 
   ResetBoundaryCarrier();
   boundary_runtime_data_initialized_ = false;
@@ -1090,7 +1092,6 @@ DiscreteOrdinatesProblem::InitializeBoundaries()
 void
 DiscreteOrdinatesProblem::InitializeWGSContexts()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::InitializeWGSContexts");
 
   // Determine max size and number of matrices along sweep front
   max_groupset_size_ = 0;
@@ -1133,7 +1134,6 @@ DiscreteOrdinatesProblem::InitializeWGSContexts()
 void
 DiscreteOrdinatesProblem::InitializeWGSSolvers()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::InitializeWGSSolvers");
 
   OpenSnLogicalErrorIf(wgs_contexts_.empty(),
                        GetName() + ": Cannot initialize WGS solvers before WGS contexts.");
@@ -1158,7 +1158,6 @@ DiscreteOrdinatesProblem::InitializeWGSSolvers()
 void
 DiscreteOrdinatesProblem::ReorientAdjointSolution()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::ReorientAdjointSolution");
 
   for (const auto& groupset : groupsets_)
   {
@@ -1264,7 +1263,6 @@ DiscreteOrdinatesProblem::ReorientAdjointSolution()
 void
 DiscreteOrdinatesProblem::ZeroOutflowBalanceVars(LBSGroupset& groupset)
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::ZeroOutflowBalanceVars");
 
   for (const auto& cell : grid_->local_cells)
     for (int f = 0; f < cell.faces.size(); ++f)
@@ -1275,7 +1273,7 @@ DiscreteOrdinatesProblem::ZeroOutflowBalanceVars(LBSGroupset& groupset)
 void
 DiscreteOrdinatesProblem::InitializeSweepDataStructures()
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::InitializeSweepDataStructures");
+  CALI_CXX_MARK_SCOPE("SweepDataStructures");
 
   log.Log() << program_timer.GetTimeString() << " Initializing sweep datastructures.\n";
 
@@ -1639,7 +1637,6 @@ DiscreteOrdinatesProblem::AssociateSOsAndDirections(const std::shared_ptr<MeshCo
                                                     const AngleAggregationType agg_type,
                                                     const GeometryType lbs_geo_type)
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::AssociateSOsAndDirections");
 
   // Checks
   if (quadrature.GetOmegas().empty())
@@ -1818,7 +1815,7 @@ DiscreteOrdinatesProblem::AssociateSOsAndDirections(const std::shared_ptr<MeshCo
 void
 DiscreteOrdinatesProblem::InitFluxDataStructures(LBSGroupset& groupset)
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::InitFluxDataStructures");
+  CALI_CXX_MARK_SCOPE("FluxDataStructures");
 
   const auto& quadrature_sweep_info = quadrature_unq_so_grouping_map_[groupset.quadrature];
 
@@ -1959,7 +1956,6 @@ DiscreteOrdinatesProblem::InitFluxDataStructures(LBSGroupset& groupset)
 std::shared_ptr<SweepChunk>
 DiscreteOrdinatesProblem::SetSweepChunk(LBSGroupset& groupset)
 {
-  CALI_CXX_MARK_SCOPE("DiscreteOrdinatesProblem::SetSweepChunk");
 
   const auto mode = sweep_chunk_mode_.value_or(SweepChunkMode::DEFAULT);
 

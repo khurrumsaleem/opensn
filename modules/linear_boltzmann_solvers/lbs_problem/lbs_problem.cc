@@ -13,6 +13,7 @@
 #include "framework/runtime.h"
 #include "framework/data_types/allowable_range.h"
 #include "framework/utils/error.h"
+#include "framework/utils/caliper_scopes.h"
 #include "caliper/cali.h"
 #include <algorithm>
 #include <iomanip>
@@ -732,8 +733,6 @@ LBSProblem::WriteProblemRestartData(hid_t /*file_id*/) const
 void
 LBSProblem::BuildRuntime()
 {
-  CALI_CXX_MARK_SCOPE("LBSProblem::BuildRuntime");
-
   PrintSimHeader();
   mpi_comm.barrier();
 
@@ -899,7 +898,8 @@ LBSProblem::InitializeXSMap(const InputParameters& params)
 void
 LBSProblem::InitializeMaterials()
 {
-  CALI_CXX_MARK_SCOPE("LBSProblem::InitializeMaterials");
+  CaliperPhaseScope cali_setup_phase("Setup", CaliperSetupPhaseDepth());
+  CALI_CXX_MARK_SCOPE("Materials");
 
   log.Log0Verbose1() << "Initializing Materials";
 
@@ -1003,7 +1003,7 @@ LBSProblem::InitializeMaterials()
 void
 LBSProblem::InitializeSpatialDiscretization()
 {
-  CALI_CXX_MARK_SCOPE("LBSProblem::InitializeSpatialDiscretization");
+  CALI_CXX_MARK_SCOPE("SpatialDiscretization");
 
   OpenSnLogicalErrorIf(not discretization_,
                        GetName() + ": Missing spatial discretization. Construct the problem "
@@ -1016,7 +1016,7 @@ LBSProblem::InitializeSpatialDiscretization()
 void
 LBSProblem::ComputeUnitIntegrals()
 {
-  CALI_CXX_MARK_SCOPE("LBSProblem::ComputeUnitIntegrals");
+  CALI_CXX_MARK_SCOPE("UnitIntegrals");
 
   log.Log() << "Computing unit integrals.\n";
   const auto& sdm = *discretization_;
@@ -1049,7 +1049,7 @@ LBSProblem::ComputeUnitIntegrals()
 void
 LBSProblem::InitializeParrays()
 {
-  CALI_CXX_MARK_SCOPE("LBSProblem::InitializeParrays");
+  CALI_CXX_MARK_SCOPE("ParallelArrays");
 
   log.Log() << "Initializing parallel arrays."
             << " G=" << num_groups_ << " M=" << num_moments_ << std::endl;
@@ -1196,7 +1196,7 @@ LBSProblem::CheckCapableDevices()
 std::vector<double>
 LBSProblem::MakeSourceMomentsFromPhi()
 {
-  CALI_CXX_MARK_SCOPE("LBSProblem::MakeSourceMomentsFromPhi");
+  CALI_CXX_MARK_SCOPE("Source/MomentsFromPhi");
 
   auto num_local_dofs = discretization_->GetNumLocalDOFs(flux_moments_uk_man_);
 
