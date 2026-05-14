@@ -16,12 +16,18 @@ LogStream
 Logger::Log(LOG_LVL level)
 {
   int rank = opensn::mpi_comm.rank();
-  std::string header;
+  const auto prefix = "[" + std::to_string(rank) + "]  ";
+  LogStream::Header header;
   std::ostream* stream = nullptr;
   bool use_dummy = false;
   bool use_color = false;
   auto color = [this](StringStreamColorCode code)
   { return color_enabled_ ? StringStreamColor(code) : std::string{}; };
+  auto set_header = [&](std::string label = "", std::string color_code = std::string{})
+  {
+    header = {prefix, std::move(label), std::move(color_code)};
+    use_color = color_enabled_ and not header.color.empty();
+  };
 
   switch (level)
   {
@@ -30,7 +36,7 @@ Logger::Log(LOG_LVL level)
     {
       if (rank == 0)
       {
-        header = "[" + std::to_string(rank) + "]  ";
+        set_header();
         stream = &std::cout;
       }
       else
@@ -41,8 +47,7 @@ Logger::Log(LOG_LVL level)
     {
       if (rank == 0)
       {
-        header = "[" + std::to_string(rank) + "]  " + color(FG_YELLOW) + "*** WARNING ***  ";
-        use_color = color_enabled_;
+        set_header("*** WARNING ***  ", color(FG_YELLOW));
         stream = &std::cout;
       }
       else
@@ -53,8 +58,7 @@ Logger::Log(LOG_LVL level)
     {
       if (rank == 0)
       {
-        header = "[" + std::to_string(rank) + "]  " + color(FG_RED) + "**** ERROR ****  ";
-        use_color = color_enabled_;
+        set_header("**** ERROR ****  ", color(FG_RED));
         stream = &std::cerr;
       }
       else
@@ -65,8 +69,7 @@ Logger::Log(LOG_LVL level)
     {
       if (rank == 0 and verbosity_ >= 1)
       {
-        header = "[" + std::to_string(rank) + "]  " + color(FG_CYAN);
-        use_color = color_enabled_;
+        set_header("", color(FG_CYAN));
         stream = &std::cout;
       }
       else
@@ -77,8 +80,7 @@ Logger::Log(LOG_LVL level)
     {
       if (rank == 0 and verbosity_ >= 2)
       {
-        header = "[" + std::to_string(rank) + "]  " + color(FG_MAGENTA);
-        use_color = color_enabled_;
+        set_header("", color(FG_MAGENTA));
         stream = &std::cout;
       }
       else
@@ -88,21 +90,19 @@ Logger::Log(LOG_LVL level)
     case LOG_ALL:
     case LOG_ALLVERBOSE_0:
     {
-      header = "[" + std::to_string(rank) + "]  ";
+      set_header();
       stream = &std::cout;
       break;
     }
     case LOG_ALLWARNING:
     {
-      header = "[" + std::to_string(rank) + "]  " + color(FG_YELLOW) + "*** WARNING ***  ";
-      use_color = color_enabled_;
+      set_header("*** WARNING ***  ", color(FG_YELLOW));
       stream = &std::cout;
       break;
     }
     case LOG_ALLERROR:
     {
-      header = "[" + std::to_string(rank) + "]  " + color(FG_RED) + "**** ERROR ****  ";
-      use_color = color_enabled_;
+      set_header("**** ERROR ****  ", color(FG_RED));
       stream = &std::cerr;
       break;
     }
@@ -110,8 +110,7 @@ Logger::Log(LOG_LVL level)
     {
       if (verbosity_ >= 1)
       {
-        header = "[" + std::to_string(rank) + "]  " + color(FG_CYAN);
-        use_color = color_enabled_;
+        set_header("", color(FG_CYAN));
         stream = &std::cout;
       }
       else
@@ -122,8 +121,7 @@ Logger::Log(LOG_LVL level)
     {
       if (verbosity_ >= 2)
       {
-        header = "[" + std::to_string(rank) + "]  " + color(FG_MAGENTA);
-        use_color = color_enabled_;
+        set_header("", color(FG_MAGENTA));
         stream = &std::cout;
       }
       else
