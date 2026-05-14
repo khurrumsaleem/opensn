@@ -2,6 +2,7 @@
 
 import json
 import os
+import fnmatch
 import warnings
 import shutil
 import time
@@ -341,19 +342,29 @@ def BuildSearchHierarchyForTests(argv):
     return test_hierarchy
 
 
+def SelectTests(test_obj, selector: str, base_directory: str) -> bool:
+    """Returns true if a configured test matches a -t/--test selector."""
+    test_path = os.path.join(test_obj.file_dir, test_obj.filename)
+    rel_path = os.path.relpath(test_path, base_directory)
+    candidates = [test_obj.filename, rel_path, test_path]
+    return any(
+        candidate == selector or fnmatch.fnmatch(candidate, selector) for candidate in candidates
+    )
+
+
 def ConfigureTests(test_hierarchy: dict, argv):
     """Search through a map of dirs-to-input-file and looks for a .json file that will then be used
        to create a test object. Also preps the out and gold directories."""
 
-    specific_test = argv.test
-    if specific_test is not None:
-        print("specific_test=" + specific_test)
+    specific_tests = argv.test
+    if specific_tests is not None:
+        print("specific_tests=" + ", ".join(specific_tests))
 
     test_objects = []
     for testdir in test_hierarchy:
         for config_file in ListFilesInDir(testdir, ".json"):
             sub_test_objs = ParseTestConfiguration(testdir + config_file)
-            specific_test_dependency = None
+            specific_test_dependencies = []
             for obj in sub_test_objs.values():
                 if argv.gpu:
                     if not obj.requires_gpu:
@@ -361,26 +372,30 @@ def ConfigureTests(test_hierarchy: dict, argv):
                 else:
                     if obj.requires_gpu:
                         continue
-                if specific_test is None or obj.filename == specific_test:
+                if specific_tests is None or any(
+                    SelectTests(obj, selector, argv.directory) for selector in specific_tests
+                ):
                     test_objects.append(obj)
-                    if specific_test is not None:
-                        specific_test_dependency = obj.dependency
+                    if specific_tests is not None and obj.dependency is not None:
+                        specific_test_dependencies.append(obj.dependency)
                 else:
                     print("skipping " + obj.filename)
 
             # If a specific test has dependencies, also add them to the list of executed tests
-            if specific_test_dependency is not None:
-                if specific_test_dependency in sub_test_objs:
-                    obj = sub_test_objs[specific_test_dependency]
-                    include_dependency = obj.requires_gpu if argv.gpu else not obj.requires_gpu
-                    if include_dependency:
-                        test_objects.append(obj)
-                    else:
-                        warnings.warn(
-                            "Dependency '" + specific_test_dependency + "' filtered by GPU mode.")
+            for dependency in specific_test_dependencies:
+                dependency_obj = next(
+                    (obj for obj in sub_test_objs.values() if obj.filename == dependency), None
+                )
+                if dependency_obj is not None:
+                    include_dependency = (
+                        dependency_obj.requires_gpu if argv.gpu else not dependency_obj.requires_gpu
+                    )
+                    if include_dependency and dependency_obj not in test_objects:
+                        test_objects.append(dependency_obj)
+                    elif not include_dependency:
+                        warnings.warn("Dependency '" + dependency + "' filtered by GPU mode.")
                 else:
-                    warnings.warn(
-                        "Specified dependency '" + specific_test_dependency + "' does not exist.")
+                    warnings.warn("Specified dependency '" + dependency + "' does not exist.")
 
         # If the out directory exists then we clear it
         if os.path.isdir(testdir + "out/"):
@@ -415,10 +430,6 @@ def RunTests(tests: list, argv):
     system_load = 0
     test_slots = []
 
-    specific_test = ""
-    if argv.test is not None:
-        specific_test = argv.test
-
     weight_class_map = ["long", "intermediate", "short"]
     weight_classes_allowed = []
     if 0 <= argv.weights <= 7:
@@ -448,10 +459,6 @@ def RunTests(tests: list, argv):
                     system_load += test.num_procs
 
                     new_slot = test_slot.TestSlot(test, argv)
-
-                    # This will only run if a specific test has been specified
-                    if new_slot.test.filename == specific_test:
-                        print("Running " + new_slot.test.GetTestPath() + ":")
 
                     test_slots.append(new_slot)
 
