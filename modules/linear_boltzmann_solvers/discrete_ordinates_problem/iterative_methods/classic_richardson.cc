@@ -11,6 +11,7 @@
 #include "modules/linear_boltzmann_solvers/lbs_problem/vecops/lbs_vecops.h"
 #include "modules/diffusion/diffusion_mip_solver.h"
 #include "framework/math/linear_solver/linear_solver.h"
+#include "framework/math/math.h"
 #include "framework/logging/log.h"
 #include "framework/utils/caliper_scopes.h"
 #include "framework/utils/timer.h"

@@ -132,7 +132,7 @@ std::vector<double> operator+(const std::vector<double>& a, const std::vector<do
 /// Subtracts two vectors component-wise.
 std::vector<double> operator-(const std::vector<double>& a, const std::vector<double>& b);
 
-double ComputePointwiseChange(std::vector<double>& x, std::vector<double>& y);
+double ComputePointwiseChange(const std::vector<double>& x, const std::vector<double>& y);
 
 double ComputeL2Change(std::vector<double>& x, std::vector<double>& y);
 

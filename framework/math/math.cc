@@ -570,17 +570,17 @@ ComputeL2Change(std::vector<double>& x, std::vector<double>& y)
 }
 
 double
-ComputePointwiseChange(std::vector<double>& x, std::vector<double>& y)
+ComputePointwiseChange(const std::vector<double>& x, const std::vector<double>& y)
 {
   assert(x.size() == y.size());
 
   double pw_change = 0.0;
   for (auto i = 0; i < x.size(); ++i)
   {
-    double max = std::max(x[i], y[i]);
-    double delta = std::fabs(x[i] - y[i]);
-    if (max >= std::numeric_limits<double>::min())
-      pw_change = std::max(delta / max, pw_change);
+    const double max_value = std::max(std::fabs(x[i]), std::fabs(y[i]));
+    const double delta = std::fabs(x[i] - y[i]);
+    if (max_value >= std::numeric_limits<double>::min())
+      pw_change = std::max(delta / max_value, pw_change);
     else
       pw_change = std::max(delta, pw_change);
   }
